@@ -2,47 +2,72 @@
 
 A battle simulator built on [tldraw offline](https://github.com/tldraw/tldraw-offline). Spawn units on a canvas, divide them into teams, hit play, and watch them fight to the last unit.
 
-## What it is
+## Download & Play
 
-tlwar-simulator turns a tldraw offline canvas into a real-time battlefield. Units are shapes with stats (health, damage, resistance, speed). Each unit follows a simple AI and fights until one side has nothing left standing.
+> **Requires [tldraw offline](https://github.com/tldraw/tldraw-offline/releases/latest)** — a free desktop app (Mac & Windows).
 
-## Features
-
-- **Unit types** — Warrior, Tank, Assassin, etc each with a distinct stat profile — see [`docs/units.md`](./docs/units.md)
-- **Spawn tools** — a pencil tool (click to place, drag to scatter along a path) and a brush tool (click to scatter a cluster within a circular area) — see [`docs/spawning-tools.md`](./docs/spawning-tools.md)
-- **2 or 4 team modes** — toggle between a left/right split or four quadrants before the battle starts
-- **Health-based color gradient** — units shift from green to red as they take damage, and turn gray when they die
-- **Team identity** — each team has a distinct colored border on their units
-- **Gameplay Controls** — Play / Pause / Clear All / etc — see [`docs/controls.md`](./docs/controls.md)
-- **AI & simulation** — pluggable tick-based combat loop — see [`docs/ai-logic.md`](./docs/ai-logic.md)
+1. Install tldraw offline from the link above
+2. Download **tlwar-simulator.tldraw** from the [latest release](https://github.com/mlziade/tlwar-simulator/releases/latest)
+3. Open the file in tldraw offline — the simulator loads automatically, no setup needed
 
 ## How to use
 
-1. Open the `.tldraw` file in [tldraw offline](https://github.com/tldraw/tldraw-offline)
-2. Choose 2-team or 4-team mode using the toggle in the toolbar
-3. Select a unit type and a spawn tool, then place units on the canvas — each region belongs to a team
-4. Hit **Play** to start the simulation
-5. The battle runs until one team has no units left — the sim pauses automatically
+1. Choose **2 Teams** or **4 Teams** from the toolbar
+2. Select a unit type (Warrior / Tank / Assassin) and a spawn tool (Pencil or Brush)
+3. Draw units onto the canvas — each region on screen belongs to a team
+4. Hit **Play** and watch the battle unfold
+5. The simulation stops automatically when one team wins
 
 ## Controls
 
 | Button | Action |
 |---|---|
-| Play | Start or resume the simulation |
-| Pause | Freeze the simulation (units hold position) |
-| Clear All | Remove all units and reset the canvas |
+| Play / Resume | Start or resume the simulation |
+| Pause | Freeze the simulation |
+| Clear | Remove all units and reset |
+| 2 Teams / 4 Teams | Toggle between left-right split and four-quadrant mode |
+
+## Unit types
+
+| Unit | HP | Damage | Resistance | Speed | Role |
+|---|---|---|---|---|---|
+| Warrior | 100 | 15 | 15 | Fast | Balanced all-rounder |
+| Tank | 200 | 12 | 40 | Slow | Frontline absorber |
+| Assassin | 60 | 45 | 3 | Very fast | Glass-cannon finisher |
+
+Resistance uses a logarithmic formula — high resistance gives diminishing returns, so no unit is immune.
+
+## Features
+
+- **Tactical AI** — Warriors spread across the enemy front, Tanks protect nearby allies, Assassins hunt the most wounded enemies
+- **Steering separation** — units fan out laterally instead of stacking into a blob
+- **Death animations** — units fade out over 0.6s when killed
+- **Damage numbers** — floating red values show effective damage on each hit
+- **Health gradient** — units shift from green → red as they take damage
+- **Team borders** — each team has a distinct color border on their units
+
+## Building from source
+
+```bash
+npm install
+npm run deploy   # builds and deploys scripts to the active tldraw offline workspace
+```
+
+Scripts are written in TypeScript and bundled with esbuild. See [`docs/`](./docs/) for architecture notes.
 
 ## Planned
 
 - Speed dial to change simulation speed in real time
 - Additional unit types
-- Additional team split options (8, 16 quadrants)
-- Improved AI algorithms (flanking, formations, target priority)
+- Flanking and formation behaviors
 
 ## Documentation
 
-See [`tldraw-offline-docs.md`](./docs/tldraw-offline/tldraw-offline-docs.md) for a full reference on the tldraw offline scripting API used to build this simulator.
+- [`docs/units.md`](./docs/units.md) — unit stats and resistance formula
+- [`docs/ai-logic.md`](./docs/ai-logic.md) — AI algorithm and tick loop
+- [`docs/spawning-tools.md`](./docs/spawning-tools.md) — spawn tool behavior
+- [`docs/controls.md`](./docs/controls.md) — controls panel reference
 
-**Official sources:**
-- [tldraw offline GitHub](https://github.com/tldraw/tldraw-offline)
-- [tldraw offline User Manual](https://tldraw.notion.site/User-manual-tldraw-offline-39a3e4c324c080e7b2eacc5afd078e85)
+**tldraw offline:**
+- [GitHub](https://github.com/tldraw/tldraw-offline)
+- [User Manual](https://tldraw.notion.site/User-manual-tldraw-offline-39a3e4c324c080e7b2eacc5afd078e85)
