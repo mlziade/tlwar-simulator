@@ -8,11 +8,12 @@ The simulation uses the tldraw-native `editor.on('tick', handler)` event, which 
 
 Each tick:
 
-1. For each living unit, run the **AI algorithm**
-2. Apply movement deltas (scaled by `elapsed` ms for frame-rate-independent motion)
-3. Resolve attacks and apply damage
-4. Update unit shape appearance (color, position)
-5. Check victory condition
+1. For each living unit, call `unit.onTick(elapsed)` — updates internal state (cooldowns, effects)
+2. Run the **AI algorithm** for each living unit — returns an action (move/attack/idle)
+3. Apply movement deltas (scaled by `elapsed` ms for frame-rate-independent motion)
+4. Resolve attacks and apply damage
+5. Update unit shape appearance (color, position)
+6. Check victory condition
 
 ## AI algorithm (pluggable)
 
@@ -21,9 +22,12 @@ The AI is a **separate, swappable module** — the `Unit` class has no AI logic 
 The module must implement a defined interface (`simulation/ai/interface.ts`) so it can be replaced without touching `Unit` or the tick loop.
 
 **Default algorithm — "nearest enemy":**
-1. Find the nearest living enemy unit (via spatial index)
-2. If within `ATTACK_RANGE`: attack — deal `max(0, damage - target.resistance)` HP damage
-3. If not in range: move toward target at `moveSpeed`
+1. If `currentTarget` is alive and within `RETARGET_RADIUS`: reuse it (skip spatial lookup)
+2. Otherwise: find the nearest living enemy via the spatial index and cache it as `currentTarget`
+3. If within `ATTACK_RANGE` and `attackCooldownMs ≤ 0`: attack — deal `max(0, damage - target.resistance)` HP damage
+4. If not in range: move toward target at `moveSpeed`
+
+Target re-evaluation only happens on death or when the cached target drifts beyond `RETARGET_RADIUS`, keeping spatial grid lookups rare rather than per-tick.
 
 ## Spatial indexing
 
@@ -31,6 +35,7 @@ To avoid O(n²) nearest-enemy lookups, the world is partitioned into a **grid of
 
 - Grid cell size: `SPATIAL_GRID_CELL_SIZE` (configurable constant in `config.ts`)
 - The grid is rebuilt or updated incrementally each tick
+- `RETARGET_RADIUS` (configurable in `config.ts`) sets how far a cached target can drift before triggering a re-lookup
 
 ## Victory condition
 
@@ -44,7 +49,8 @@ To avoid O(n²) nearest-enemy lookups, the world is partitioned into a **grid of
 - The tick loop uses `editor.on('tick', ...)` — it runs on the editor's own animation frame, so it never blocks the UI thread
 - All simulation shape updates (color, position) are batched into a single `editor.run(() => editor.updateShapes([...]), { history: 'ignore' })` call per tick — `history: 'ignore'` is mandatory to prevent the undo stack from filling up and killing performance
 - Dead units are removed from the active unit list immediately to reduce loop iterations
-- All performance-sensitive constants (`TICK_RATE`, `SPATIAL_GRID_CELL_SIZE`) are centralized in `config.ts`
+- Target caching (`currentTarget` + `RETARGET_RADIUS`) keeps spatial grid lookups rare — the dominant per-unit cost at scale
+- All performance-sensitive constants (`TICK_RATE`, `SPATIAL_GRID_CELL_SIZE`, `RETARGET_RADIUS`) are centralized in `config.ts`
 - tldraw is optimized for interactive use (thousands of shapes); avoid pushing unit counts into the tens of thousands — test at 50–100 units per team before scaling up
 
 ## Code structure

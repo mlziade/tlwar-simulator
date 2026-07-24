@@ -47,9 +47,13 @@ Default team colors (4-team): add Red and Green (distinct from the health gradie
 All unit types inherit from a shared `Unit` base class:
 
 - **Stats**: `hp`, `maxHp`, `damage`, `resistance`, `moveSpeed`, `attackSpeed`
-- **State**: `position`, `team`, `isAlive`, `currentTarget`
+- **State**: `position`, `team`, `isAlive`, `currentTarget`, `attackCooldownMs`
 - **Combat methods**: `takeDamage(amount)`, `die()`
-- **Lifecycle hooks**: `onSpawn()`, `onTick(delta)`, `onDeath()`
+- **Lifecycle hooks**: `onSpawn()`, `onTick(elapsed)`, `onDeath()`
+
+`onTick(elapsed)` handles the unit's own internal state only — it decrements `attackCooldownMs` by `elapsed` and applies any future ticking effects (e.g. burning). It does **not** make decisions; the AI module in `loop.ts` handles that separately after `onTick` runs.
+
+`attackCooldownMs` starts at 0. After each attack it resets to `1000 / attackSpeed` ms. The AI only issues an attack action when `attackCooldownMs ≤ 0`.
 
 Subclasses override only the stat defaults. Adding a new unit type means creating a new class that extends `Unit`, overriding stats, and registering it in `units/registry.ts`. No other changes required.
 
