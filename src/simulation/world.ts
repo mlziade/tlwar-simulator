@@ -77,6 +77,7 @@ export class World {
 
     const shapes = editor.getCurrentPageShapes().filter(s => s.type === 'unit')
 
+    const teamUpdates: any[] = []
     for (const shape of shapes) {
       const pos = { x: shape.x, y: shape.y }
       const props = shape.props as { unitType: UnitType; hp: number; maxHp: number; team: string }
@@ -87,7 +88,9 @@ export class World {
       this.units.push(unit)
       this.teamMap.set(unit.id, team)
       this.spatialGrid.insert(unit)
+      teamUpdates.push({ id: shape.id, type: 'unit', props: { team } })
     }
+    editor.run(() => { editor.updateShapes(teamUpdates) }, { history: 'ignore' })
   }
 
   removeUnit(unit: Unit): void {
