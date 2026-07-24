@@ -11,9 +11,11 @@ export class TacticalAI implements AIAlgorithm {
   decide(unit: Unit, world: World): AIAction {
     // Lock on while in melee range — don't interrupt ongoing combat
     if (unit.currentTarget?.isAlive) {
-      const d = dist(unit.position, unit.currentTarget.position)
-      if (d <= ATTACK_RANGE) {
-        if (unit.attackCooldownMs <= 0) return { type: 'attack', target: unit.currentTarget }
+      const ct = unit.currentTarget
+      const d = dist(unit.position, ct.position)
+      const engageRange = ATTACK_RANGE + unit.radius + ct.radius
+      if (d <= engageRange) {
+        if (unit.attackCooldownMs <= 0) return { type: 'attack', target: ct }
         // Cooldown active but engaged — hold position instead of pushing into target
         return { type: 'idle' }
       }
@@ -28,8 +30,9 @@ export class TacticalAI implements AIAlgorithm {
     if (!target) return { type: 'idle' }
 
     const d = dist(unit.position, target.position)
-    if (d <= ATTACK_RANGE && unit.attackCooldownMs <= 0) return { type: 'attack', target }
-    if (d <= ATTACK_RANGE) return { type: 'idle' }
+    const engageRange = ATTACK_RANGE + unit.radius + target.radius
+    if (d <= engageRange && unit.attackCooldownMs <= 0) return { type: 'attack', target }
+    if (d <= engageRange) return { type: 'idle' }
 
     // Seek direction toward target
     const seekDx = target.position.x - unit.position.x

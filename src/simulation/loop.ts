@@ -1,6 +1,7 @@
 import type { Editor, TLShapeId } from 'tldraw'
 import { TICK_RATE } from '../constants'
 import type { Unit } from '../units/Unit'
+import { unitSize } from '../shapes/UnitShape'
 import type { World } from './world'
 import type { AIAlgorithm } from './ai/interface'
 
@@ -94,15 +95,16 @@ export class SimulationLoop {
     // 4. Rebuild grid to reflect post-separation positions
     world.spatialGrid.rebuild(world.units)
 
-    // 5. Batch all canvas writes
+    // 5. Batch all canvas writes — convert center position back to tldraw top-left
     const posUpdates: any[] = []
     for (const unit of movedUnits) {
       if (unit.isAlive) {
+        const sz = unitSize(unit.unitType)
         posUpdates.push({
           id: unit.shapeId as TLShapeId,
           type: 'unit',
-          x: unit.position.x,
-          y: unit.position.y,
+          x: unit.position.x - sz.w / 2,
+          y: unit.position.y - sz.h / 2,
         })
       }
     }

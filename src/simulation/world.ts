@@ -79,8 +79,9 @@ export class World {
 
     const teamUpdates: any[] = []
     for (const shape of shapes) {
-      const pos = { x: shape.x, y: shape.y }
-      const props = shape.props as { unitType: UnitType; hp: number; maxHp: number; team: string }
+      const props = shape.props as { unitType: UnitType; hp: number; maxHp: number; team: string; w: number; h: number }
+      // Store center position so radius-based distance checks are correct
+      const pos = { x: shape.x + props.w / 2, y: shape.y + props.h / 2 }
       const team = zoneManager.getTeam(pos)
       const unit = createUnit(props.unitType, team, pos)
       unit.shapeId = shape.id

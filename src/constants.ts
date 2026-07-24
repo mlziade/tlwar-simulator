@@ -1,4 +1,4 @@
-export const ATTACK_RANGE = 60
+export const ATTACK_RANGE = 5  // edge-to-edge reach; effective range = this + attacker.radius + target.radius
 export const ARMOR_CONSTANT = 100
 export const TICK_RATE = 16
 export const SPATIAL_GRID_CELL_SIZE = 100
