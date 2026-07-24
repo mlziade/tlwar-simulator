@@ -8,9 +8,12 @@
   },
   "scripts": {
     "build": "npm run build:main && npm run build:config",
-    "build:main": "esbuild src/main.ts --bundle --outfile=dist/main.js --format=esm --external:tldraw --external:react --external:react-dom",
-    "build:config": "esbuild src/tlconfig.ts --bundle --outfile=dist/config.js --format=esm --external:tldraw --external:react --external:react-dom",
-    "watch": "concurrently \"npm run build:main -- --watch\" \"npm run build:config -- --watch\"",
+    "build:main": "esbuild src/main.ts --bundle --outfile=dist/main.js --format=esm --external:tldraw --external:react --external:react-dom --external:react/jsx-runtime --external:react/jsx-dev-runtime",
+    "build:config": "esbuild src/tlconfig.ts --bundle --outfile=dist/config.js --format=esm --external:tldraw --external:react --external:react-dom --external:react/jsx-runtime --external:react/jsx-dev-runtime",
+    "deploy:main": "esbuild src/main.ts --bundle --format=esm --external:tldraw --external:react --external:react-dom --external:react/jsx-runtime --external:react/jsx-dev-runtime --outfile=\"C:/Users/ziade/AppData/Roaming/tldraw/working/wd-40908-0/script/main.js\"",
+    "deploy:config": "esbuild src/tlconfig.ts --bundle --format=esm --external:tldraw --external:react --external:react-dom --external:react/jsx-runtime --external:react/jsx-dev-runtime --outfile=\"C:/Users/ziade/AppData/Roaming/tldraw/working/wd-40908-0/script/config.js\"",
+    "deploy": "npm run deploy:main && npm run deploy:config",
+    "watch": "concurrently \"npm run deploy:main -- --watch\" \"npm run deploy:config -- --watch\"",
     "typecheck": "tsc --noEmit"
   },
   "repository": {

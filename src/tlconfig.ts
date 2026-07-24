@@ -9,7 +9,7 @@ export default function ({ config }: { config: any }) {
   config.tools.push(PencilSpawnTool, BrushSpawnTool, DeleteTool)
   config.components = {
     ...config.components,
-    TopPanel: Controls,
+    SharePanel: Controls,
   }
   return config
 }
