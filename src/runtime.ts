@@ -1,11 +1,9 @@
 import type { ZoneManager } from './zones/ZoneManager'
 
-let _zoneManager: ZoneManager | null = null
-
 export function setZoneManager(zm: ZoneManager): void {
-  _zoneManager = zm
+  ;(globalThis as any).__tlwarZoneManager = zm
 }
 
 export function getZoneManager(): ZoneManager | null {
-  return _zoneManager
+  return (globalThis as any).__tlwarZoneManager ?? null
 }
