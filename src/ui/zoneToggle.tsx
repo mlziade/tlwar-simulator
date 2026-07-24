@@ -22,15 +22,14 @@ export function ZoneToggle() {
       disabled={disabled}
       title="Toggle between 2-team and 4-team mode"
       style={{
-        padding: '3px 9px',
-        borderRadius: 5,
-        border: '1px solid rgba(255,255,255,0.1)',
+        padding: '4px 10px',
+        borderRadius: 6,
+        border: '1px solid #e8e8e8',
         cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.38 : 1,
-        fontSize: 11,
-        background: 'rgba(255,255,255,0.05)',
-        color: 'rgba(255,255,255,0.7)',
-        whiteSpace: 'nowrap',
+        opacity: disabled ? 0.5 : 1,
+        fontSize: 12,
+        background: '#fff',
+        color: '#333',
       }}
     >
       {count === 2 ? '2 Teams' : '4 Teams'}
