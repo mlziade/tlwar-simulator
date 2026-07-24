@@ -9,4 +9,4 @@ export const BRUSH_MIN_UNIT_DISTANCE = 30
 export const BRUSH_MAX_UNIT_DISTANCE = 80
 export const ZONE_LINE_EXTENT = 10000
 export const STEERING_SEPARATION_RADIUS = 80  // px — allies within this range push each other sideways
-export const STEERING_SEPARATION_WEIGHT = 1.2 // multiplier vs seek force (1.0 = equal weight)
+export const STEERING_SEPARATION_WEIGHT = 0.8 // multiplier vs lateral spread (1.0 = 45° deflection)

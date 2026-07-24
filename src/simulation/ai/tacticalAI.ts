@@ -37,11 +37,19 @@ export class TacticalAI implements AIAlgorithm {
     const seekLen = Math.hypot(seekDx, seekDy)
     if (seekLen === 0) return { type: 'idle' }
 
-    // Blend seek with lateral repulsion from nearby allies.
-    // This fans units out as they approach instead of stacking them into a blob.
+    const seekNx = seekDx / seekLen
+    const seekNy = seekDy / seekLen
+
+    // Only apply the LATERAL component of the separation force (perpendicular to seek).
+    // This fans units sideways without ever pushing them away from their target,
+    // which previously caused back-row units to stall and jitter across attack range.
     const sep = this.separationForce(unit, world)
-    const dx = seekDx / seekLen + sep.x * STEERING_SEPARATION_WEIGHT
-    const dy = seekDy / seekLen + sep.y * STEERING_SEPARATION_WEIGHT
+    const sepDotSeek = sep.x * seekNx + sep.y * seekNy
+    const sepLateralX = sep.x - sepDotSeek * seekNx
+    const sepLateralY = sep.y - sepDotSeek * seekNy
+
+    const dx = seekNx + sepLateralX * STEERING_SEPARATION_WEIGHT
+    const dy = seekNy + sepLateralY * STEERING_SEPARATION_WEIGHT
     const len = Math.hypot(dx, dy)
     if (len === 0) return { type: 'idle' }
     return { type: 'move', direction: { x: dx / len, y: dy / len } }
