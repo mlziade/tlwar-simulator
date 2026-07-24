@@ -13,7 +13,7 @@ export function interpolateHealthColor(ratio: number): string {
 export function teamColor(team: string): string {
   switch (team) {
     case 'A': return '#1565C0'
-    case 'B': return '#E65100'
+    case 'B': return '#C2185B'
     case 'C': return '#6A1B9A'
     case 'D': return '#00838F'
     default:  return '#888888'
