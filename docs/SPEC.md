@@ -161,6 +161,7 @@ See [`controls.md`](./controls.md) for the full controls specification including
 - [tldraw offline User Manual](https://tldraw.notion.site/User-manual-tldraw-offline-39a3e4c324c080e7b2eacc5afd078e85)
 - [`tldraw-offline-docs.md`](./tldraw-offline/tldraw-offline-docs.md) — local scripting API reference
 - [`units.md`](./units.md) — unit types, stats, color system, and class architecture
+- [`shapes.md`](./shapes.md) — custom ShapeUtil: props, rendering, simulation update contract
 - [`spawning-tools.md`](./spawning-tools.md) — spawn tool modes, dials, and constants
 - [`controls.md`](./controls.md) — play/pause/clear controls and zone toggle behavior
 - [`ai-logic.md`](./ai-logic.md) — simulation loop, pluggable AI, spatial indexing, victory condition
