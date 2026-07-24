@@ -111,7 +111,7 @@ See [`spawning-tools.md`](./spawning-tools.md) for the full spawning tool specif
 
 ## 6. Controls
 
-See [`controls.md`](./controls.md) for the full controls specification including the team toggle lock behavior and planned speed dial.
+See [`controls.md`](./controls.md) for the full controls specification including the team toggle lock behavior.
 
 ### Summary
 
