@@ -2,11 +2,13 @@
 
 ## Unit types
 
-| Unit | HP | Damage | Resistance | Move Speed | Attack Speed | Description |
-|---|---|---|---|---|---|---|
-| **Warrior** | 100 | 15 | 10 | 60 | 1.0 | Balanced across all stats |
-| **Tank** | 250 | 8 | 30 | 30 | 0.5 | High durability, low output |
-| **Assassin** | 50 | 40 | 2 | 120 | 2.0 | Glass cannon — high risk, high reward |
+| Unit | HP | Damage | Resistance | Move Speed | Attack Speed | Shape | Size | Description |
+|---|---|---|---|---|---|---|---|---|
+| **Warrior** | 100 | 15 | 10 | 60 | 1.0 | Circle (`ellipse`) | 32px | Balanced across all stats |
+| **Tank** | 250 | 8 | 30 | 30 | 0.5 | Square (`rectangle`) | 48px | High durability, low output |
+| **Assassin** | 50 | 40 | 2 | 120 | 2.0 | Diamond (`diamond`) | 24px | Glass cannon — high risk, high reward |
+
+Shape geometry and size are the sole visual differentiators between unit types — color is reserved for the health gradient (fill) and team identity (border). Size reflects durability: Tanks are large and hard to miss, Assassins are small and fast.
 
 > Stat values are illustrative; final balance is set in code constants per class.
 

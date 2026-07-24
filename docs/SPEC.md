@@ -85,7 +85,15 @@ Default team colors (4-team): add Red and Green (distinct from the health gradie
 
 ### Unit shape
 
-Each unit is rendered as a tldraw shape. Shape type (circle, square, etc.) is defined per unit type and is consistent — the visual difference between unit types is shape geometry + size, not color (color is reserved for health and team).
+Each unit is rendered as a tldraw shape. Shape type and size are the sole visual differentiators between unit types — color is reserved for health (fill gradient) and team identity (border).
+
+| Unit | Shape | Size |
+|---|---|---|
+| Warrior | Circle (`ellipse`) | 32px |
+| Tank | Square (`rectangle`) | 48px |
+| Assassin | Diamond (`diamond`) | 24px |
+
+Size scales with durability: Tanks are large and prominent, Assassins are small and fast.
 
 ---
 
