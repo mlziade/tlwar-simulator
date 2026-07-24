@@ -193,9 +193,10 @@ Define and export every hardcoded game constant as a named `const`:
 | Constant | Value | What it controls |
 |---|---|---|
 | `ATTACK_RANGE` | `60` | Distance in px at which a unit can attack |
+| `ARMOR_CONSTANT` | `100` | Denominator in the logarithmic resistance formula — sets the resistance value at which 50% damage is mitigated |
 | `TICK_RATE` | `16` | Minimum ms between simulation ticks (~60fps) |
 | `SPATIAL_GRID_CELL_SIZE` | `100` | Grid cell size in px for spatial indexing |
-| `RETARGET_RADIUS` | `200` | How far a cached target can drift before re-lookup |
+| `RETARGET_RADIUS` | `2000` | How far a cached target can drift before re-lookup |
 | `BORDER_TOLERANCE_PX` | `8` | How close to a border line counts as "on the line" |
 | `PENCIL_SPAWN_INTERVAL` | `50` | px between units when dragging with pencil tool |
 | `BRUSH_MIN_UNIT_DISTANCE` | `30` | Min px distance between brush-spawned units |
@@ -261,7 +262,8 @@ export class Unit {
   constructor(team: string, position: { x: number; y: number }) { ... }
 
   takeDamage(amount: number): void {
-    const effective = Math.max(0, amount - this.resistance)
+    const mitigation = this.resistance / (this.resistance + ARMOR_CONSTANT)
+    const effective = amount * (1 - mitigation)
     this.hp -= effective
     if (this.hp <= 0) this.die()
   }
@@ -292,9 +294,9 @@ Each overrides only the stat defaults and `unitType`:
 
 | Stat | Warrior | Tank | Assassin |
 |---|---|---|---|
-| `maxHp` / `hp` | 100 | 250 | 50 |
-| `damage` | 15 | 8 | 40 |
-| `resistance` | 10 | 30 | 2 |
+| `maxHp` / `hp` | 100 | 200 | 60 |
+| `damage` | 15 | 12 | 45 |
+| `resistance` | 15 | 40 | 3 |
 | `moveSpeed` | 60 | 30 | 120 |
 | `attackSpeed` | 1.0 | 0.5 | 2.0 |
 | `unitType` | `'warrior'` | `'tank'` | `'assassin'` |

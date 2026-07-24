@@ -4,9 +4,9 @@
 
 | Unit | HP | Damage | Resistance | Move Speed | Attack Speed | Shape | Size | Description |
 |---|---|---|---|---|---|---|---|---|
-| **Warrior** | 100 | 15 | 10 | 60 | 1.0 | Circle (`ellipse`) | 32px | Balanced across all stats |
-| **Tank** | 250 | 8 | 30 | 30 | 0.5 | Square (`rectangle`) | 48px | High durability, low output |
-| **Assassin** | 50 | 40 | 2 | 120 | 2.0 | Diamond (`diamond`) | 24px | Glass cannon — high risk, high reward |
+| **Warrior** | 100 | 15 | 15 | 60 | 1.0 | Circle (`ellipse`) | 32px | Balanced across all stats |
+| **Tank** | 200 | 12 | 40 | 30 | 0.5 | Square (`rectangle`) | 48px | High durability, low output |
+| **Assassin** | 60 | 45 | 3 | 120 | 2.0 | Diamond (`diamond`) | 24px | Glass cannon — high risk, high reward |
 
 Shape geometry and size are the sole visual differentiators between unit types — color is reserved for the health gradient (fill) and team identity (border). Size reflects durability: Tanks are large and hard to miss, Assassins are small and fast.
 
@@ -18,7 +18,7 @@ Shape geometry and size are the sole visual differentiators between unit types �
 |---|---|---|
 | `hp` / `maxHp` | points | Current and maximum health |
 | `damage` | points/hit | Raw damage dealt per attack |
-| `resistance` | points | Flat damage reduction applied before HP loss |
+| `resistance` | points | Logarithmic damage mitigation: `effective = damage × (1 - resistance / (resistance + ARMOR_CONSTANT))` — diminishing returns so no unit is ever immune |
 | `moveSpeed` | px/sec | Distance traveled per second |
 | `attackSpeed` | attacks/sec | How often the unit can attack |
 
@@ -42,7 +42,7 @@ Unit fill color interpolates based on `hp / maxHp`:
 Each team has an assigned color shown as a border/stroke on the unit shape, separate from the health fill. Border color does not change during combat.
 
 Default team colors (2-team): Blue (`#1565C0`) / Orange (`#E65100`)  
-Default team colors (4-team): add Red and Green (distinct from the health gradient).
+Default team colors (4-team): add Purple (`#6A1B9A`) and Teal (`#00838F`) for teams C and D — not red/green, to avoid visual conflict with the health gradient.
 
 ## Code architecture
 
