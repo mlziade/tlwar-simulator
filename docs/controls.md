@@ -8,7 +8,7 @@ All controls are rendered as custom UI elements (toolbar buttons / overlays) wit
 |---|---|
 | **Play** | Starts the tick loop; locks team assignment; disables zone toggle |
 | **Pause** | Suspends the tick loop; units hold position and state |
-| **Clear All** | Stops and resets simulation; removes all units; re-enables zone toggle |
+| **Clear** | Stops and resets simulation; removes all units; re-enables zone toggle |
 
 ## Team toggle
 

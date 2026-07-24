@@ -9,10 +9,10 @@ The simulation uses the tldraw-native `editor.on('tick', handler)` event, which 
 Each tick:
 
 1. `unit.onTick(elapsed)` — decay cooldowns
-2. **AI decision** per unit — returns move / attack / idle
-3. Apply movement (frame-rate-independent: `direction × moveSpeed × dt/1000`)
-4. **Separation pass** — position-level nudge to resolve any remaining physical overlaps
-5. Rebuild spatial grid once after the pass
+2. **AI decision** per unit — movement and attacks are applied inline as decisions are made
+3. **Separation pass** — position-level nudge to resolve any remaining physical overlaps
+4. Rebuild spatial grid once after the pass
+5. **Death fade** — update opacity of recently-killed shapes (0.6 s fade); delete shapes that have fully faded
 6. Batch all canvas writes (`editor.run`, `history: 'ignore'`)
 7. Check victory condition
 
@@ -36,10 +36,13 @@ The fix is two complementary mechanisms:
 When moving toward a target, units also apply a **repulsive force from nearby allies**. This force is blended into the movement direction every tick.
 
 ```
-move_direction = normalize(seek_direction + separation_force × WEIGHT)
+lateral_sep = sep - dot(sep, seek_norm) × seek_norm   // strip the forward/backward component
+move_direction = normalize(seek_direction + lateral_sep × WEIGHT)
 ```
 
-The separation force is computed from spatial-grid neighbors (same team only):
+Only the **lateral** (perpendicular-to-seek) component of the separation force is applied. Stripping the forward/backward component means separation can never push a unit away from its target — it can only deflect it sideways. This prevents back-row units from stalling and eliminates oscillation at the attack-range boundary.
+
+The separation force itself is computed from spatial-grid neighbors (same team only):
 
 ```
 for each ally within STEERING_SEPARATION_RADIUS:
@@ -47,9 +50,7 @@ for each ally within STEERING_SEPARATION_RADIUS:
 separation_force = normalize(push)
 ```
 
-Effect: units fan out laterally as they approach the enemy, naturally occupying different points along the enemy front. Heavier units (tanks, larger radius) spread more.
-
-Constants: `STEERING_SEPARATION_RADIUS = 80px`, `STEERING_SEPARATION_WEIGHT = 1.2`
+Constants: `STEERING_SEPARATION_RADIUS = 80px`, `STEERING_SEPARATION_WEIGHT = 0.8`
 
 ### 2. Target spreading on pick
 

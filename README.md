@@ -39,7 +39,7 @@ Resistance uses a logarithmic formula — high resistance gives diminishing retu
 
 ## Features
 
-- **Tactical AI** — Warriors spread across the enemy front, Tanks protect nearby allies, Assassins hunt the most wounded enemies
+- **Tactical AI** — Warriors spread across the enemy front, Tanks protect nearby allies, Assassins target the enemy with the lowest current HP
 - **Steering separation** — units fan out laterally instead of stacking into a blob
 - **Death animations** — units fade out over 0.6s when killed
 - **Damage numbers** — floating red values show effective damage on each hit

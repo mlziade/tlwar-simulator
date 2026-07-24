@@ -7,7 +7,7 @@ Units are placed on the canvas using two spawn tools. The flow is always: **sele
 - **Single click + release**: spawn 1 unit at cursor position
 - **Click + drag**: spawn units at regular distance intervals along the drag path
   - Interval is distance-based, not time-based — drag speed does not affect spawn count
-  - Interval distance: `PENCIL_SPAWN_INTERVAL` (px, hardcoded constant in `config.ts`)
+  - Interval distance: `PENCIL_SPAWN_INTERVAL` (px, hardcoded constant in `constants.ts`)
 
 ## Mode 2 — Brush
 
@@ -26,7 +26,7 @@ A circular spawn area centered on the cursor.
 
 A dedicated delete tool in the toolbar. Click a unit to remove it. No drag-delete in the initial implementation.
 
-## Constants (config.ts)
+## Constants (constants.ts)
 
 | Constant | Description |
 |---|---|

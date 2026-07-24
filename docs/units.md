@@ -4,9 +4,9 @@
 
 | Unit | HP | Damage | Resistance | Move Speed | Attack Speed | Shape | Size | Description |
 |---|---|---|---|---|---|---|---|---|
-| **Warrior** | 100 | 15 | 15 | 60 | 1.0 | Circle (`ellipse`) | 32px | Balanced across all stats |
-| **Tank** | 200 | 12 | 40 | 30 | 0.5 | Square (`rectangle`) | 48px | High durability, low output |
-| **Assassin** | 60 | 45 | 3 | 120 | 2.0 | Diamond (`diamond`) | 24px | Glass cannon — high risk, high reward |
+| **Warrior** | 100 | 15 | 15 | 72 | 1.2 | Circle (`ellipse`) | 32px | Balanced across all stats |
+| **Tank** | 200 | 12 | 40 | 36 | 0.6 | Square (`rectangle`) | 48px | High durability, low output |
+| **Assassin** | 60 | 45 | 3 | 144 | 2.4 | Diamond (`diamond`) | 24px | Glass cannon — high risk, high reward |
 
 Shape geometry and size are the sole visual differentiators between unit types — color is reserved for the health gradient (fill) and team identity (border). Size reflects durability: Tanks are large and hard to miss, Assassins are small and fast.
 
@@ -22,7 +22,7 @@ Shape geometry and size are the sole visual differentiators between unit types �
 | `moveSpeed` | px/sec | Distance traveled per second |
 | `attackSpeed` | attacks/sec | How often the unit can attack |
 
-All units share a single global attack range constant (`ATTACK_RANGE`, defined in `config.ts`). There are no ranged vs. melee distinctions.
+All units share a single global attack range constant (`ATTACK_RANGE`, defined in `constants.ts`). Effective melee range is `ATTACK_RANGE + attacker.radius + target.radius`, so larger units have slightly more reach. There are no ranged vs. melee distinctions.
 
 ## Health color gradient
 
@@ -41,8 +41,8 @@ Unit fill color interpolates based on `hp / maxHp`:
 
 Each team has an assigned color shown as a border/stroke on the unit shape, separate from the health fill. Border color does not change during combat.
 
-Default team colors (2-team): Blue (`#1565C0`) / Orange (`#E65100`)  
-Default team colors (4-team): add Purple (`#6A1B9A`) and Teal (`#00838F`) for teams C and D — not red/green, to avoid visual conflict with the health gradient.
+Default team colors (2-team): Blue (`#1565C0`) / Magenta (`#C2185B`)  
+Default team colors (4-team): add Purple (`#6A1B9A`) and Teal (`#00838F`) for teams C and D — warm colors avoided to prevent visual conflict with the health gradient.
 
 ## Code architecture
 
