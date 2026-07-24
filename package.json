@@ -1,0 +1,40 @@
+{
+  "name": "tlwar-simulator",
+  "version": "1.0.0",
+  "description": "A battle simulator built on [tldraw offline](https://github.com/tldraw/tldraw-offline). Spawn units on a canvas, divide them into teams, hit play, and watch them fight to the last unit.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "build": "npm run build:main && npm run build:config",
+    "build:main": "esbuild src/main.ts --bundle --outfile=dist/main.js --format=esm --external:tldraw --external:react --external:react-dom",
+    "build:config": "esbuild src/tlconfig.ts --bundle --outfile=dist/config.js --format=esm --external:tldraw --external:react --external:react-dom",
+    "watch": "concurrently \"npm run build:main -- --watch\" \"npm run build:config -- --watch\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlziade/tlwar-simulator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/mlziade/tlwar-simulator/issues"
+  },
+  "homepage": "https://github.com/mlziade/tlwar-simulator#readme",
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tldraw": "^5.2.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "concurrently": "^10.0.3",
+    "esbuild": "^0.28.1",
+    "typescript": "^7.0.2"
+  }
+}
