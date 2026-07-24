@@ -74,7 +74,7 @@ export class UnitShapeUtil extends ShapeUtil<UnitShape> {
       width: w,
       height: h,
       backgroundColor: fill,
-      border: `3px solid ${border}`,
+      border: `5px solid ${border}`,
       boxSizing: 'border-box',
       pointerEvents: 'none',
     }
