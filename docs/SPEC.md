@@ -20,8 +20,8 @@ tlwar-simulator is a real-time battle simulation running inside a tldraw offline
 
 ### Team assignment
 
-- A unit's team is determined by **which zone it occupies when Play is pressed**
-- Units placed on a border default to the zone with the majority of their area
+- A unit's team is determined by **which zone its center point occupies when Play is pressed**
+- Units whose center falls on or within `BORDER_TOLERANCE_PX` of a border line block the start — the Play button is disabled and the user is prompted to move or remove them
 - Team assignment is **fixed** once the simulation starts
 
 ### Future extensibility
@@ -164,4 +164,5 @@ See [`controls.md`](./controls.md) for the full controls specification including
 - [`shapes.md`](./shapes.md) — custom ShapeUtil: props, rendering, simulation update contract
 - [`spawning-tools.md`](./spawning-tools.md) — spawn tool modes, dials, and constants
 - [`controls.md`](./controls.md) — play/pause/clear controls and zone toggle behavior
+- [`zones.md`](./zones.md) — zone layout, team assignment, border validation, ZoneManager interface
 - [`ai-logic.md`](./ai-logic.md) — simulation loop, pluggable AI, spatial indexing, victory condition
