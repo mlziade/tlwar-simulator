@@ -125,6 +125,12 @@ export class World {
     return nearest
   }
 
+  getNearbyAllies(unit: Unit): Unit[] {
+    const myTeam = this.teamMap.get(unit.id)
+    return this.spatialGrid.getNearbyUnits(unit.position)
+      .filter(u => u !== unit && u.isAlive && this.teamMap.get(u.id) === myTeam)
+  }
+
   getLowestHpEnemy(unit: Unit): Unit | null {
     const myTeam = this.teamMap.get(unit.id)
     let best: Unit | null = null

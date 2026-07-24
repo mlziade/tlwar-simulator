@@ -4,79 +4,123 @@
 
 The simulation uses the tldraw-native `editor.on('tick', handler)` event, which fires at 60+ fps and provides an `elapsed` millisecond delta. This is preferred over a manual `requestAnimationFrame` or `setTimeout` loop — it runs in sync with the editor's rendering pipeline and requires no lifecycle management.
 
-`TICK_RATE` in `config.ts` is kept as a configurable throttle (e.g. skip ticks when `elapsed` accumulates below the threshold) for tuning simulation speed independently of the render rate.
+`TICK_RATE` in `constants.ts` throttles how often the simulation actually advances (default 16ms ≈ 60 logic-ticks/sec), independent of the render rate.
 
 Each tick:
 
-1. For each living unit, call `unit.onTick(elapsed)` — updates internal state (cooldowns, effects)
-2. Run the **AI algorithm** for each living unit — returns an action (move/attack/idle)
-3. Apply movement deltas (scaled by `elapsed` ms for frame-rate-independent motion)
-4. **Separation pass** — nudge overlapping units apart using the spatial grid; rebuild grid once after
-5. Resolve attacks and apply damage
-6. Update unit shape appearance (color, position) in a single batched `editor.run` call
+1. `unit.onTick(elapsed)` — decay cooldowns
+2. **AI decision** per unit — returns move / attack / idle
+3. Apply movement (frame-rate-independent: `direction × moveSpeed × dt/1000`)
+4. **Separation pass** — position-level nudge to resolve any remaining physical overlaps
+5. Rebuild spatial grid once after the pass
+6. Batch all canvas writes (`editor.run`, `history: 'ignore'`)
 7. Check victory condition
 
-## AI algorithm — Tactical AI
+---
 
-The AI is a **separate, swappable module** — the `Unit` class has no AI logic itself. The algorithm receives a unit and the current world state, and returns an action: move direction, attack target, or idle.
+## AI algorithm — Tactical AI (`simulation/ai/tacticalAI.ts`)
 
-The active implementation is `TacticalAI` (`simulation/ai/tacticalAI.ts`). It applies per-unit-type targeting logic and re-evaluates targets every tick rather than caching a sticky lock-on.
+The AI is a swappable module implementing `AIAlgorithm.decide(unit, world): AIAction`. No AI logic lives in `Unit` itself.
+
+### The blob problem
+
+Pure "seek nearest enemy" causes all units to converge on a single point because:
+- Every unit picks the same nearest target
+- Units move in a straight line toward it
+- They stack up and overlap once there
+
+The fix is two complementary mechanisms:
+
+### 1. Steering separation (continuous lateral force)
+
+When moving toward a target, units also apply a **repulsive force from nearby allies**. This force is blended into the movement direction every tick.
+
+```
+move_direction = normalize(seek_direction + separation_force × WEIGHT)
+```
+
+The separation force is computed from spatial-grid neighbors (same team only):
+
+```
+for each ally within STEERING_SEPARATION_RADIUS:
+  push += (unit_pos - ally_pos).normalized × linear_falloff(distance)
+separation_force = normalize(push)
+```
+
+Effect: units fan out laterally as they approach the enemy, naturally occupying different points along the enemy front. Heavier units (tanks, larger radius) spread more.
+
+Constants: `STEERING_SEPARATION_RADIUS = 80px`, `STEERING_SEPARATION_WEIGHT = 1.2`
+
+### 2. Target spreading on pick
+
+When a unit needs a new target (start of battle, or after current target dies), it scores enemies rather than just picking the nearest:
+
+```
+score = 1000 / (distance + 50)  −  attacker_count × 0.5
+```
+
+`attacker_count` = how many allied units already have this enemy as their `currentTarget`.
+
+Because `world.units` is processed sequentially each tick, once warrior A sets a target that enemy's count increments immediately, and warrior B (processed next) sees the congested count and may prefer a different enemy. Result: warriors spread across the enemy front within a single tick at battle start.
+
+After a target is picked it is **kept sticky until death** — no mid-pursuit re-evaluation. Sticky targeting prevents jitter and lets units commit to kills.
+
+### Per-unit-type strategy
+
+| Type | Target selection | Rationale |
+|------|-----------------|-----------|
+| **Warrior** | Spread-score (distance − congestion) | Distributes evenly across enemy front |
+| **Tank** | Enemy with smallest minimum distance to any ally | Rushes to protect the most-threatened ally |
+| **Assassin** | Globally lowest-HP enemy | Picks off weakened units to maximize kill rate |
+
+All types apply the separation steering force while moving toward their target.
 
 ### Melee lock-on
 
-If a unit's current target is alive and already within `ATTACK_RANGE`, it stays committed:
-- Cooldown expired: attack
-- Cooldown active: idle (stops pushing into the target, which would fight the separation pass)
+Once a unit's target is within `ATTACK_RANGE`:
+- Cooldown ready → attack
+- Cooldown active → **idle** (holds position, does not push into the target)
 
-The lock-on is dropped the moment the target leaves `ATTACK_RANGE` or dies. This prevents units from chasing a retreating target after it escapes melee.
+Holding position prevents units from pushing into their target while waiting to swing, which previously caused constant overlap that the separation pass had to undo every tick.
 
-### Per-unit-type targeting
-
-| Type | Strategy | Rationale |
-|------|----------|-----------|
-| **Warrior** | Nearest enemy (re-evaluated each tick) | Balanced all-rounder; always engages the most immediate threat |
-| **Tank** | Enemy with the smallest minimum distance to any ally | Rushes to protect allies — targets the enemy deepest inside our lines |
-| **Assassin** | Lowest-HP enemy (global scan) | Picks off weakened units; maximises kill pressure |
-
-Warriors no longer sticky-chase a target that a faster unit has already passed — they switch every tick. Tanks provide a soft "bodyguard" effect without any explicit aggro system. Assassins naturally gravitate toward dying enemies to secure kills.
-
-### Target re-evaluation
-
-All types re-evaluate every tick outside of the melee lock-on window. This solves the "passing unit" problem: if a faster enemy walks closer than the currently chased target, the unit immediately pivots.
+---
 
 ## Spatial indexing
 
-To avoid O(n²) nearest-enemy lookups, the world is partitioned into a **grid of buckets**. Each tick, units are assigned to buckets by position. Nearest-enemy search checks only the unit's bucket and its immediate neighbors; a global fallback is used when the neighborhood is empty (e.g. distant armies at battle start).
+The world is partitioned into a grid of buckets (`SPATIAL_GRID_CELL_SIZE = 100px`). Nearest-enemy searches check the unit's cell and its 8 neighbors — O(k) where k is the average occupancy per cell.
 
-- Grid cell size: `SPATIAL_GRID_CELL_SIZE` (configurable constant in `constants.ts`)
-- Grid is rebuilt once per tick after the separation pass
+The grid is rebuilt once per tick after the separation pass. `getNearbyAllies(unit)` filters grid neighbors to same-team living units only, used by the separation force.
 
-**Note on `getMostDangerousEnemy` (Tank):** this performs an O(enemies × allies) scan per tank. At typical game scales (10–30 tanks) this is negligible, but avoid spawning hundreds of tanks.
+**`getMostDangerousEnemy` (Tank):** O(enemies × allies) per tank per tick. Fine at game scale; avoid hundreds of tanks.
+
+---
 
 ## Victory condition
 
-- The simulation ends when **only one team has living units remaining**
-- On victory: the tick loop stops and a win announcement is displayed (e.g. "Team A wins!")
-- The canvas is not cleared automatically — units remain in their death positions
-- The user must press **Clear All** to reset
+- Ends when only one team has living units
+- Tick loop stops; win announcement displayed
+- Canvas not cleared automatically — press **Clear All** to reset
+
+---
 
 ## Performance guidelines
 
-- The tick loop uses `editor.on('tick', ...)` — it runs on the editor's own animation frame, so it never blocks the UI thread
-- All simulation shape updates (color, position) are batched into a single `editor.run(() => editor.updateShapes([...]), { history: 'ignore' })` call per tick — `history: 'ignore'` is mandatory to prevent the undo stack from filling up and killing performance
-- Dead units are removed from the active unit list immediately to reduce loop iterations
-- `TacticalAI` re-evaluates targets every tick; the spatial grid keeps warrior lookup O(k) where k = neighbors. Assassin and Tank use O(n) global scans — acceptable at game scale
-- All performance-sensitive constants (`TICK_RATE`, `SPATIAL_GRID_CELL_SIZE`) are centralized in `constants.ts`
-- tldraw is optimized for interactive use (thousands of shapes); avoid pushing unit counts into the tens of thousands — test at 50–100 units per team before scaling up
+- All shape updates batched into one `editor.run(..., { history: 'ignore' })` per tick
+- Dead units removed from `world.units` immediately
+- Separation steering uses spatial grid → O(k) per unit, not O(n)
+- Warrior spread-target scan is O(n) per warrior per tick (O(n²) total) — acceptable at 50–200 units
+- Avoid tens of thousands of units; test at 50–100 per team first
+
+---
 
 ## Code structure
 
 ```
 simulation/
   loop.ts              # Tick loop orchestration
-  world.ts             # World state: active units, spatial grid, team assignments
+  world.ts             # World state, spatial grid, team assignments, enemy queries
   ai/
-    interface.ts       # AI algorithm interface definition
+    interface.ts       # AIAlgorithm / AIAction interface
     nearestEnemy.ts    # Original nearest-enemy AI (kept for reference)
-    tacticalAI.ts      # Active AI: per-type targeting, no sticky lock-on
+    tacticalAI.ts      # Active AI: steering separation + spread targeting + sticky lock-on
 ```
