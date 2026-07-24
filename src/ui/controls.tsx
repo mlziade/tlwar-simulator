@@ -3,7 +3,7 @@ import { useValue, useEditor, type TLShapeId } from 'tldraw'
 import { simState, borderWarning, victoryTeam } from './state'
 import { World } from '../simulation/world'
 import { SimulationLoop } from '../simulation/loop'
-import { NearestEnemyAI } from '../simulation/ai/nearestEnemy'
+import { TacticalAI } from '../simulation/ai/tacticalAI'
 import { getZoneManager } from '../runtime'
 import { Toolbar } from './toolbar'
 import { ZoneToggle } from './zoneToggle'
@@ -38,7 +38,7 @@ export function Controls() {
     if (!zm) return
 
     const world = new World(editor, zm)
-    const loop = new SimulationLoop(editor, world, new NearestEnemyAI(), (team) => {
+    const loop = new SimulationLoop(editor, world, new TacticalAI(), (team) => {
       victoryTeam.set(team)
       simState.set('idle')
     })

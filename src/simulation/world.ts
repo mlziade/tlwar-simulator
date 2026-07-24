@@ -125,6 +125,37 @@ export class World {
     return nearest
   }
 
+  getLowestHpEnemy(unit: Unit): Unit | null {
+    const myTeam = this.teamMap.get(unit.id)
+    let best: Unit | null = null
+    let bestHp = Infinity
+    for (const other of this.units) {
+      if (!other.isAlive || this.teamMap.get(other.id) === myTeam) continue
+      if (other.hp < bestHp) { bestHp = other.hp; best = other }
+    }
+    return best
+  }
+
+  getMostDangerousEnemy(unit: Unit): Unit | null {
+    const myTeam = this.teamMap.get(unit.id)
+    const allies = this.units.filter(u => u.isAlive && this.teamMap.get(u.id) === myTeam && u !== unit)
+    if (allies.length === 0) return this.getNearestEnemy(unit)
+
+    let best: Unit | null = null
+    let bestScore = Infinity
+    for (const enemy of this.units) {
+      if (!enemy.isAlive || this.teamMap.get(enemy.id) === myTeam) continue
+      // Score = minimum distance to any ally; lower means deeper inside our lines
+      let minAllyDist = Infinity
+      for (const ally of allies) {
+        const d = dist(enemy.position, ally.position)
+        if (d < minAllyDist) minAllyDist = d
+      }
+      if (minAllyDist < bestScore) { bestScore = minAllyDist; best = enemy }
+    }
+    return best
+  }
+
   checkVictory(): string | null {
     const livingTeams = new Set(
       this.units.filter(u => u.isAlive).map(u => this.teamMap.get(u.id)!)
