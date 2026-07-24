@@ -1,5 +1,6 @@
 import type { Editor, TLShapeId } from 'tldraw'
 import { TICK_RATE } from '../constants'
+import type { Unit } from '../units/Unit'
 import type { World } from './world'
 import type { AIAlgorithm } from './ai/interface'
 
@@ -35,13 +36,16 @@ export class SimulationLoop {
     this.accumulated = 0
 
     const { world, ai, editor } = this
-    const shapeUpdates: any[] = []
+    const movedUnits = new Set<Unit>()
+    const hpUpdates: any[] = []
     const shapeDeletes: TLShapeId[] = []
 
+    // 1. Cooldowns
     for (const unit of [...world.units]) {
       unit.onTick(dt)
     }
 
+    // 2. AI decisions
     for (const unit of [...world.units]) {
       if (!unit.isAlive) continue
       const action = ai.decide(unit, world)
@@ -51,21 +55,15 @@ export class SimulationLoop {
         unit.position.x += action.direction.x * unit.moveSpeed * (dt / 1000)
         unit.position.y += action.direction.y * unit.moveSpeed * (dt / 1000)
         world.spatialGrid.move(unit, oldPos)
-        shapeUpdates.push({
-          id: unit.shapeId as TLShapeId,
-          type: 'unit',
-          x: unit.position.x,
-          y: unit.position.y,
-        })
+        movedUnits.add(unit)
       } else if (action.type === 'attack') {
         action.target.takeDamage(unit.damage)
         unit.attackCooldownMs = 1000 / unit.attackSpeed
-
         if (!action.target.isAlive) {
           shapeDeletes.push(action.target.shapeId as TLShapeId)
           world.removeUnit(action.target)
         } else {
-          shapeUpdates.push({
+          hpUpdates.push({
             id: action.target.shapeId as TLShapeId,
             type: 'unit',
             props: { hp: action.target.hp },
@@ -74,8 +72,45 @@ export class SimulationLoop {
       }
     }
 
+    // 3. Separation pass — nudge overlapping units apart using the spatial grid
+    for (const unit of world.units) {
+      if (!unit.isAlive) continue
+      for (const other of world.spatialGrid.getNearbyUnits(unit.position)) {
+        if (other === unit || !other.isAlive) continue
+        const dx = unit.position.x - other.position.x
+        const dy = unit.position.y - other.position.y
+        const distSq = dx * dx + dy * dy
+        const minDist = unit.radius + other.radius
+        if (distSq < minDist * minDist && distSq > 0.0001) {
+          const d = Math.sqrt(distSq)
+          const push = (minDist - d) * 0.5
+          unit.position.x += (dx / d) * push
+          unit.position.y += (dy / d) * push
+          movedUnits.add(unit)
+        }
+      }
+    }
+
+    // 4. Rebuild grid to reflect post-separation positions
+    world.spatialGrid.rebuild(world.units)
+
+    // 5. Batch all canvas writes
+    const posUpdates: any[] = []
+    for (const unit of movedUnits) {
+      if (unit.isAlive) {
+        posUpdates.push({
+          id: unit.shapeId as TLShapeId,
+          type: 'unit',
+          x: unit.position.x,
+          y: unit.position.y,
+        })
+      }
+    }
+
     editor.run(() => {
-      if (shapeUpdates.length > 0) editor.updateShapes(shapeUpdates)
+      if (posUpdates.length > 0 || hpUpdates.length > 0) {
+        editor.updateShapes([...posUpdates, ...hpUpdates])
+      }
       if (shapeDeletes.length > 0) editor.deleteShapes(shapeDeletes)
     }, { history: 'ignore' })
 

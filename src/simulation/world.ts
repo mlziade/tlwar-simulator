@@ -54,6 +54,13 @@ class SpatialGrid {
   clear(): void {
     this.cells.clear()
   }
+
+  rebuild(units: Unit[]): void {
+    this.cells.clear()
+    for (const unit of units) {
+      if (unit.isAlive) this.insert(unit)
+    }
+  }
 }
 
 function dist(a: { x: number; y: number }, b: { x: number; y: number }): number {
@@ -90,15 +97,28 @@ export class World {
   }
 
   getNearestEnemy(unit: Unit): Unit | null {
-    const candidates = this.spatialGrid.getNearbyUnits(unit.position)
+    const myTeam = this.teamMap.get(unit.id)
     let nearest: Unit | null = null
     let minDist = Infinity
-    for (const other of candidates) {
+
+    // Spatial grid for nearby candidates first
+    for (const other of this.spatialGrid.getNearbyUnits(unit.position)) {
       if (!other.isAlive) continue
-      if (this.teamMap.get(other.id) === this.teamMap.get(unit.id)) continue
+      if (this.teamMap.get(other.id) === myTeam) continue
       const d = dist(unit.position, other.position)
       if (d < minDist) { minDist = d; nearest = other }
     }
+
+    // Global fallback when no enemy in neighborhood (units starting far apart)
+    if (!nearest) {
+      for (const other of this.units) {
+        if (!other.isAlive || other === unit) continue
+        if (this.teamMap.get(other.id) === myTeam) continue
+        const d = dist(unit.position, other.position)
+        if (d < minDist) { minDist = d; nearest = other }
+      }
+    }
+
     return nearest
   }
 

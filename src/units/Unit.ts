@@ -13,6 +13,7 @@ export class Unit {
   attackSpeed: number
   attackCooldownMs: number = 0
   isAlive: boolean = true
+  radius: number = 16
   currentTarget: Unit | null = null
   unitType: 'warrior' | 'tank' | 'assassin'
 
