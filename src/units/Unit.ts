@@ -39,11 +39,12 @@ export class Unit {
     this.attackSpeed = attackSpeed
   }
 
-  takeDamage(amount: number): void {
+  takeDamage(amount: number): number {
     const mitigation = this.resistance / (this.resistance + ARMOR_CONSTANT)
     const effective = amount * (1 - mitigation)
     this.hp -= effective
     if (this.hp <= 0) this.die()
+    return effective
   }
 
   die(): void {

@@ -10,16 +10,33 @@ const TOOL_IDS: { key: 'pencil' | 'brush' | 'delete'; label: string; tldrawId: s
   { key: 'delete', label: 'Delete', tldrawId: 'unit-delete' },
 ]
 
-const btnStyle = (active: boolean, disabled: boolean): React.CSSProperties => ({
-  padding: '4px 10px',
-  borderRadius: 6,
-  border: active ? '2px solid #1565C0' : '1px solid #ccc',
-  cursor: disabled ? 'not-allowed' : 'pointer',
-  opacity: disabled ? 0.5 : 1,
-  fontSize: 12,
-  background: active ? '#e3eef9' : '#fff',
-  fontWeight: active ? 600 : 400,
-})
+const dim: React.CSSProperties = { fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.06em', textTransform: 'uppercase' }
+
+function Chip({ active, disabled, onClick, children }: {
+  active: boolean; disabled: boolean; onClick: () => void; children: React.ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        padding: '3px 9px',
+        borderRadius: 5,
+        border: active ? '1px solid rgba(120,180,255,0.55)' : '1px solid rgba(255,255,255,0.1)',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.38 : 1,
+        fontSize: 11,
+        background: active ? 'rgba(21,101,192,0.45)' : 'rgba(255,255,255,0.05)',
+        fontWeight: active ? 700 : 400,
+        color: active ? '#90caf9' : 'rgba(255,255,255,0.7)',
+        transition: 'background 0.1s, border-color 0.1s',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {children}
+    </button>
+  )
+}
 
 export function Toolbar() {
   const editor = useEditor()
@@ -42,58 +59,40 @@ export function Toolbar() {
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-      <span style={{ fontSize: 11, fontWeight: 600, color: '#555' }}>Unit:</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+      <span style={dim}>Unit</span>
       {UNIT_TYPES.map(t => (
-        <button
-          key={t}
-          style={btnStyle(unitType === t, running)}
-          onClick={() => selectUnitType(t)}
-          disabled={running}
-        >
+        <Chip key={t} active={unitType === t} disabled={running} onClick={() => selectUnitType(t)}>
           {t.charAt(0).toUpperCase() + t.slice(1)}
-        </button>
+        </Chip>
       ))}
 
-      <span style={{ fontSize: 11, fontWeight: 600, color: '#555', marginLeft: 8 }}>Tool:</span>
+      <span style={{ ...dim, marginLeft: 6 }}>Tool</span>
       {TOOL_IDS.map(({ key, label, tldrawId }) => (
-        <button
-          key={key}
-          style={btnStyle(tool === key, running)}
-          onClick={() => selectTool(key, tldrawId)}
-          disabled={running}
-        >
+        <Chip key={key} active={tool === key} disabled={running} onClick={() => selectTool(key, tldrawId)}>
           {label}
-        </button>
+        </Chip>
       ))}
 
       {tool === 'brush' && !running && (
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
-          <label style={{ fontSize: 11, color: '#555' }}>
-            Radius:
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 6 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>
+            R
             <input
-              type="range"
-              min={20}
-              max={200}
-              step={10}
-              value={radius}
+              type="range" min={20} max={200} step={10} value={radius}
               onChange={e => brushRadius.set(Number(e.target.value))}
-              style={{ width: 70, marginLeft: 4 }}
+              style={{ width: 55, accentColor: '#90caf9' }}
             />
-            <span style={{ marginLeft: 4, fontSize: 11 }}>{radius}px</span>
+            <span style={{ color: 'rgba(255,255,255,0.6)', minWidth: 26 }}>{radius}</span>
           </label>
-          <label style={{ fontSize: 11, color: '#555', marginLeft: 6 }}>
-            Count:
+          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>
+            N
             <input
-              type="range"
-              min={1}
-              max={20}
-              step={1}
-              value={count}
+              type="range" min={1} max={20} step={1} value={count}
               onChange={e => unitCount.set(Number(e.target.value))}
-              style={{ width: 60, marginLeft: 4 }}
+              style={{ width: 45, accentColor: '#90caf9' }}
             />
-            <span style={{ marginLeft: 4, fontSize: 11 }}>{count}</span>
+            <span style={{ color: 'rgba(255,255,255,0.6)', minWidth: 16 }}>{count}</span>
           </label>
         </span>
       )}

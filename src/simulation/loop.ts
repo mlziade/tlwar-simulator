@@ -5,15 +5,19 @@ import { unitSize } from '../shapes/UnitShape'
 import type { World } from './world'
 import type { AIAlgorithm } from './ai/interface'
 
+const DEATH_FADE_MS = 600
+
 export class SimulationLoop {
   private accumulated = 0
   private _running = false
+  private dyingUnits = new Map<TLShapeId, number>() // shapeId → death start timestamp
 
   constructor(
     private editor: Editor,
     private world: World,
     private ai: AIAlgorithm,
     private onVictory: (team: string) => void,
+    private onDamage?: (x: number, y: number, amount: number) => void,
   ) {}
 
   start(): void {
@@ -39,7 +43,6 @@ export class SimulationLoop {
     const { world, ai, editor } = this
     const movedUnits = new Set<Unit>()
     const hpUpdates: any[] = []
-    const shapeDeletes: TLShapeId[] = []
 
     // 1. Cooldowns
     for (const unit of [...world.units]) {
@@ -58,10 +61,11 @@ export class SimulationLoop {
         world.spatialGrid.move(unit, oldPos)
         movedUnits.add(unit)
       } else if (action.type === 'attack') {
-        action.target.takeDamage(unit.damage)
+        const effective = action.target.takeDamage(unit.damage)
         unit.attackCooldownMs = 1000 / unit.attackSpeed
+        this.onDamage?.(action.target.position.x, action.target.position.y, effective)
         if (!action.target.isAlive) {
-          shapeDeletes.push(action.target.shapeId as TLShapeId)
+          this.dyingUnits.set(action.target.shapeId as TLShapeId, Date.now())
           world.removeUnit(action.target)
         } else {
           hpUpdates.push({
@@ -95,7 +99,21 @@ export class SimulationLoop {
     // 4. Rebuild grid to reflect post-separation positions
     world.spatialGrid.rebuild(world.units)
 
-    // 5. Batch all canvas writes — convert center position back to tldraw top-left
+    // 5. Process death fade animations
+    const now = Date.now()
+    const finishedDying: TLShapeId[] = []
+    const opacityUpdates: any[] = []
+    for (const [shapeId, startMs] of this.dyingUnits) {
+      const age = (now - startMs) / DEATH_FADE_MS
+      if (age >= 1) {
+        finishedDying.push(shapeId)
+      } else {
+        opacityUpdates.push({ id: shapeId, type: 'unit', opacity: 1 - age })
+      }
+    }
+    for (const id of finishedDying) this.dyingUnits.delete(id)
+
+    // 6. Batch all canvas writes — convert center position back to tldraw top-left
     const posUpdates: any[] = []
     for (const unit of movedUnits) {
       if (unit.isAlive) {
@@ -110,10 +128,10 @@ export class SimulationLoop {
     }
 
     editor.run(() => {
-      if (posUpdates.length > 0 || hpUpdates.length > 0) {
-        editor.updateShapes([...posUpdates, ...hpUpdates])
+      if (posUpdates.length > 0 || hpUpdates.length > 0 || opacityUpdates.length > 0) {
+        editor.updateShapes([...posUpdates, ...hpUpdates, ...opacityUpdates])
       }
-      if (shapeDeletes.length > 0) editor.deleteShapes(shapeDeletes)
+      if (finishedDying.length > 0) editor.deleteShapes(finishedDying)
     }, { history: 'ignore' })
 
     const winner = world.checkVictory()
