@@ -166,3 +166,4 @@ See [`controls.md`](./controls.md) for the full controls specification including
 - [`controls.md`](./controls.md) — play/pause/clear controls and zone toggle behavior
 - [`zones.md`](./zones.md) — zone layout, team assignment, border validation, ZoneManager interface
 - [`ai-logic.md`](./ai-logic.md) — simulation loop, pluggable AI, spatial indexing, victory condition
+- [`world.md`](./world.md) — world state structure, Play/Pause/Clear All lifecycle
