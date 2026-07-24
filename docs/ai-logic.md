@@ -2,10 +2,14 @@
 
 ## Tick loop
 
-The simulation runs on a fixed-interval tick loop (target: ~60 ticks/sec, configurable via `TICK_RATE` in `config.ts`). Each tick:
+The simulation uses the tldraw-native `editor.on('tick', handler)` event, which fires at 60+ fps and provides an `elapsed` millisecond delta. This is preferred over a manual `requestAnimationFrame` or `setTimeout` loop — it runs in sync with the editor's rendering pipeline and requires no lifecycle management.
+
+`TICK_RATE` in `config.ts` is kept as a configurable throttle (e.g. skip ticks when `elapsed` accumulates below the threshold) for tuning simulation speed independently of the render rate.
+
+Each tick:
 
 1. For each living unit, run the **AI algorithm**
-2. Apply movement deltas
+2. Apply movement deltas (scaled by `elapsed` ms for frame-rate-independent motion)
 3. Resolve attacks and apply damage
 4. Update unit shape appearance (color, position)
 5. Check victory condition
@@ -37,10 +41,11 @@ To avoid O(n²) nearest-enemy lookups, the world is partitioned into a **grid of
 
 ## Performance guidelines
 
-- The tick loop must not block the UI thread — use `requestAnimationFrame` or a `setTimeout`-based loop with yielding
-- Unit shape updates (color, position) are batched and applied once per tick via `editor.updateShapes()`
+- The tick loop uses `editor.on('tick', ...)` — it runs on the editor's own animation frame, so it never blocks the UI thread
+- All simulation shape updates (color, position) are batched into a single `editor.run(() => editor.updateShapes([...]), { history: 'ignore' })` call per tick — `history: 'ignore'` is mandatory to prevent the undo stack from filling up and killing performance
 - Dead units are removed from the active unit list immediately to reduce loop iterations
 - All performance-sensitive constants (`TICK_RATE`, `SPATIAL_GRID_CELL_SIZE`) are centralized in `config.ts`
+- tldraw is optimized for interactive use (thousands of shapes); avoid pushing unit counts into the tens of thousands — test at 50–100 units per team before scaling up
 
 ## Code structure
 
