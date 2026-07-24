@@ -48,7 +48,8 @@ See [`ai-logic.md`](./ai-logic.md) for the full simulation loop, pluggable AI in
 
 ### Summary
 
-- Fixed-interval tick loop (~60 ticks/sec); each tick runs AI, moves units, resolves combat, updates visuals, checks victory
+- Tick loop driven by `editor.on('tick', handler)` (~60 fps); each tick runs AI, moves units, resolves combat, updates visuals, checks victory
+- All shape updates batched per tick via `editor.run(() => editor.updateShapes([...]), { history: 'ignore' })` — `history: 'ignore'` is required to prevent undo stack bloat
 - AI is a swappable module with a defined interface — `Unit` has no AI logic itself
 - Default algorithm: find nearest enemy → move toward → attack when in range
 - Spatial grid bucketing avoids O(n²) nearest-enemy lookups
@@ -69,6 +70,8 @@ Unit fill color interpolates based on `hp / maxHp`:
 | 0% (dead) | Gray (`#9E9E9E`) |
 
 Interpolation is linear HSL or RGB — consistent across all unit types.
+
+> **Constraint:** Built-in `geo` shapes only accept named palette colors, not hex values. The gradient requires a custom `ShapeUtil` using `HTMLContainer` with inline CSS styles. See [`units.md`](./units.md) for details.
 
 ### Team identity
 

@@ -33,6 +33,8 @@ Unit fill color interpolates based on `hp / maxHp`:
 | ~10% | Red (`#F44336`) |
 | 0% (dead) | Gray (`#9E9E9E`) |
 
+> **Important:** tldraw's built-in `geo` shapes only accept named palette colors (e.g. `'blue'`, `'red'`), not arbitrary hex values. The hex gradient above requires a **custom `ShapeUtil` with an `HTMLContainer` renderer** that applies the color as an inline CSS style. This is also why a custom shape is mandatory (not optional) — it's the only way to achieve the gradient.
+
 ## Team identity
 
 Each team has an assigned color shown as a border/stroke on the unit shape, separate from the health fill. Border color does not change during combat.
