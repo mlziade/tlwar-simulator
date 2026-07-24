@@ -1,3 +1,5 @@
+import { ARMOR_CONSTANT } from '../constants'
+
 export class Unit {
   id: string
   shapeId: string = ''
@@ -37,7 +39,8 @@ export class Unit {
   }
 
   takeDamage(amount: number): void {
-    const effective = Math.max(0, amount - this.resistance)
+    const mitigation = this.resistance / (this.resistance + ARMOR_CONSTANT)
+    const effective = amount * (1 - mitigation)
     this.hp -= effective
     if (this.hp <= 0) this.die()
   }
